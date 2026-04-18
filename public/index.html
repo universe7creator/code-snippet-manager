@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code Snippet Manager — Organize & Share Your Code</title>
+  <meta name="description" content="Store, organize, and share code snippets with syntax highlighting. Instant search, categorization, and one-click copy.">
+  <meta property="og:title" content="Code Snippet Manager">
+  <meta property="og:description" content="Your personal code snippet library with syntax highlighting">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0a0a;
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .glow-btn {
+      position: relative;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      overflow: hidden;
+    }
+
+    .glow-btn::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+      border-radius: inherit;
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.3s;
+      filter: blur(10px);
+    }
+
+    .glow-btn:hover::before {
+      opacity: 1;
+    }
+
+    .code-font {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .snippet-card {
+      transition: all 0.3s ease;
+    }
+
+    .snippet-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(102, 126, 234, 0.2);
+    }
+
+    .fade-in {
+      animation: fadeIn 0.6s ease-out forwards;
+      opacity: 0;
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translateY(20px); }
+    }
+
+    .shimmer {
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+      background-size: 200% 100%;
+      animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    .tag {
+      background: rgba(102, 126, 234, 0.2);
+      border: 1px solid rgba(102, 126, 234, 0.3);
+    }
+
+    .tag:hover {
+      background: rgba(102, 126, 234, 0.4);
+    }
+
+    pre {
+      margin: 0 !important;
+      border-radius: 0 0 8px 8px !important;
+    }
+
+    .hljs {
+      background: #1a1a2e !important;
+      padding: 1rem !important;
+    }
+
+    .search-input:focus {
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="fixed top-0 left-0 right-0 z-50 glass">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <i data-lucide="code-2" class="w-6 h-6 text-indigo-400"></i>
+        <span class="font-semibold text-lg">SnippetManager</span>
+      </div>
+      <button id="navBuyBtn" class="glow-btn px-5 py-2 rounded-full text-sm font-medium">
+        Get Started — $19
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="min-h-screen flex items-center justify-center pt-20 px-6">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="fade-in" style="animation-delay: 0.1s">
+        <span class="inline-block px-4 py-1.5 rounded-full text-xs font-medium bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 mb-6">
+          🚀 Your Code, Organized
+        </span>
+      </div>
+
+      <h1 class="text-5xl md:text-7xl font-bold mb-6 fade-in" style="animation-delay: 0.2s">
+        <span class="gradient-text">Code Snippet</span><br>
+        <span class="text-white">Manager</span>
+      </h1>
+
+      <p class="text-xl text-gray-400 max-w-2xl mx-auto mb-10 fade-in" style="animation-delay: 0.3s">
+        Store, organize, and share your code snippets with beautiful syntax highlighting.
+        Instant search, smart categorization, and one-click copy.
+      </p>
+
+      <div class="flex flex-wrap justify-center gap-4 mb-16 fade-in" style="animation-delay: 0.4s">
+        <button id="heroBuyBtn" class="glow-btn px-8 py-4 rounded-full text-lg font-semibold">
+          Get Lifetime Access — $19
+        </button>
+        <button onclick="document.getElementById('demo').scrollIntoView({behavior: 'smooth'})" class="px-8 py-4 rounded-full text-lg font-semibold glass hover:bg-white/5 transition">
+          Try Demo
+        </button>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid grid-cols-3 gap-8 max-w-lg mx-auto fade-in" style="animation-delay: 0.5s">
+        <div class="text-center">
+          <div class="text-3xl font-bold gradient-text">50+</div>
+          <div class="text-sm text-gray-500">Languages</div>
+        </div>
+        <div class="text-center">
+          <div class="text-3xl font-bold gradient-text">∞</div>
+          <div class="text-sm text-gray-500">Snippets</div>
+        </div>
+        <div class="text-center">
+          <div class="text-3xl font-bold gradient-text">0ms</div>
+          <div class="text-sm text-gray-500">Search</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Demo Section -->
+  <section id="demo" class="py-20 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">Try It Live</h2>
+        <p class="text-gray-400">Create, organize, and search your snippets instantly</p>
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-8">
+        <!-- Snippet Form -->
+        <div class="glass rounded-2xl p-6">
+          <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+            <i data-lucide="plus-circle" class="w-5 h-5 text-indigo-400"></i>
+            New Snippet
+          </h3>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm text-gray-400 mb-1">Title</label>
+              <input type="text" id="snippetTitle" placeholder="e.g., React useEffect Hook" class="w-full px-4 py-2 bg-black/30 border border-white/10 rounded-lg focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <div>
+              <label class="block text-sm text-gray-400 mb-1">Language</label>
+              <select id="snippetLang" class="w-full px-4 py-2 bg-black/30 border border-white/10 rounded-lg focus:outline-none focus:border-indigo-500">
+                <option value="javascript">JavaScript</option>
+                <option value="python">Python</option>
+                <option value="css">CSS</option>
+                <option value="sql">SQL</option>
+                <option value="bash">Bash</option>
+                <option value="json">JSON</option>
+                <option value="html">HTML</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm text-gray-400 mb-1">Category</label>
+              <select id="snippetCategory" class="w-full px-4 py-2 bg-black/30 border border-white/10 rounded-lg focus:outline-none focus:border-indigo-500">
+                <option value="general">General</option>
+                <option value="react">React</option>
+                <option value="api">API</option>
+                <option value="utils">Utilities</option>
+                <option value="css">CSS/Styling</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm text-gray-400 mb-1">Code</label>
+              <textarea id="snippetCode" rows="6" placeholder="Paste your code here..." class="w-full px-4 py-2 bg-black/30 border border-white/10 rounded-lg focus:outline-none focus:border-indigo-500 code-font text-sm"></textarea>
+            </div>
+
+            <button id="saveSnippet" class="w-full glow-btn py-3 rounded-lg font-medium">
+              Save Snippet
+            </button>
+          </div>
+        </div>
+
+        <!-- Snippet List -->
+        <div class="space-y-4">
+          <!-- Search -->
+          <div class="relative">
+            <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500"></i>
+            <input type="text" id="searchSnippets" placeholder="Search snippets..." class="w-full pl-12 pr-4 py-3 bg-black/30 border border-white/10 rounded-xl search-input focus:outline-none">
+          </div>
+
+          <!-- Filter Tags -->
+          <div class="flex flex-wrap gap-2">
+            <button class="tag px-3 py-1 rounded-full text-xs" data-filter="all">All</button>
+            <button class="tag px-3 py-1 rounded-full text-xs" data-filter="react">React</button>
+            <button class="tag px-3 py-1 rounded-full text-xs" data-filter="api">API</button>
+            <button class="tag px-3 py-1 rounded-full text-xs" data-filter="utils">Utilities</button>
+            <button class="tag px-3 py-1 rounded-full text-xs" data-filter="css">CSS</button>
+          </div>
+
+          <!-- Snippets Container -->
+          <div id="snippetsList" class="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+            <!-- Snippets will be inserted here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="py-20 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">Everything You Need</h2>
+        <p class="text-gray-400">Built for developers who value their time</p>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="glass rounded-2xl p-6 hover:bg-white/5 transition">
+          <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center mb-4">
+            <i data-lucide="search" class="w-6 h-6 text-indigo-400"></i>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Instant Search</h3>
+          <p class="text-gray-400 text-sm">Find any snippet in milliseconds with powerful search across titles, code, and tags.</p>
+        </div>
+
+        <div class="glass rounded-2xl p-6 hover:bg-white/5 transition">
+          <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mb-4">
+            <i data-lucide="palette" class="w-6 h-6 text-purple-400"></i>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Syntax Highlighting</h3>
+          <p class="text-gray-400 text-sm">Beautiful syntax highlighting for 50+ programming languages with Atom One Dark theme.</p>
+        </div>
+
+        <div class="glass rounded-2xl p-6 hover:bg-white/5 transition">
+          <div class="w-12 h-12 rounded-xl bg-pink-500/20 flex items-center justify-center mb-4">
+            <i data-lucide="folder-tree" class="w-6 h-6 text-pink-400"></i>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Smart Categories</h3>
+          <p class="text-gray-400 text-sm">Organize snippets by category. Filter and browse with intuitive tags.</p>
+        </div>
+
+        <div class="glass rounded-2xl p-6 hover:bg-white/5 transition">
+          <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mb-4">
+            <i data-lucide="copy" class="w-6 h-6 text-blue-400"></i>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">One-Click Copy</h3>
+          <p class="text-gray-400 text-sm">Copy any snippet to clipboard instantly. No more selecting text manually.</p>
+        </div>
+
+        <div class="glass rounded-2xl p-6 hover:bg-white/5 transition">
+          <div class="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center mb-4">
+            <i data-lucide="download" class="w-6 h-6 text-green-400"></i>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Export & Import</h3>
+          <p class="text-gray-400 text-sm">Export your entire library or import snippets. Your data, your control.</p>
+        </div>
+
+        <div class="glass rounded-2xl p-6 hover:bg-white/5 transition">
+          <div class="w-12 h-12 rounded-xl bg-yellow-500/20 flex items-center justify-center mb-4">
+            <i data-lucide="zap" class="w-6 h-6 text-yellow-400"></i>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Lightning Fast</h3>
+          <p class="text-gray-400 text-sm">Zero latency. Everything happens instantly in your browser.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials -->
+  <section class="py-20 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">Loved by Developers</h2>
+        <p class="text-gray-400">See what others are saying</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="glass rounded-2xl p-6">
+          <div class="flex gap-1 mb-4">
+            <i data-lucide="star" class="w-4 h-4 text-yellow-400 fill-yellow-400"></i>
+            <i data-lucide="star" class="w-4 h-4 text-yellow-400 fill-yellow-400"></i>
+            <i data-lucide="star" class="w-4 h-4 text-yellow-400 fill-yellow-400"></i>
+            <i data-lucide="star" class="w-4 h-4 text-yellow-400 fill-yellow-400"></i>
+            <i data-lucide="star" class="w-4 h-4 text-yellow-400 fill-yellow-400"></i>
+          </div>
+          <p class="text-gray-300 mb-4">"Finally, a snippet manager that just works. The search is incredibly fast and the syntax highlighting is beautiful."</p>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-sm font-semibold">JD</div>
+            <div>
+              <div class="font-medium">John Doe</div>
+              <div class="text-sm text-gray-500">Senior Developer</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass rounded-2xl p-6">
+          <div class="flex gap-1 mb-4">
+            <i data-lucide="star" class="w-4 h-4 text-yellow-400 fill-yellow-400"></i>
+            <i data-lucide="star" class="w-4 h-4 text-yellow-400 fill-yellow-400"></i>
+            <i data-lucide="star" class="w-4 h-4 text-yellow-400 fill-yellow-400"></i>
+            <i data-lucide="star" class="w-4 h-4 text-yellow-400 fill-yellow-400"></i>
+            <i data-lucide="star" class="w-4 h-4 text-yellow-400 fill-yellow-400"></i>
+          </div>
+          <p class="text-gray-300 mb-4">"I've tried dozens of snippet managers. This is the first one that feels like it was built by developers, for developers."</p>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-sm font-semibold">AS</div>
+            <div>
+              <div class="font-medium">Alice Smith</div>
+              <div class="text-sm text-gray-500">Full Stack Engineer</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass rounded-2xl p-6">
+          <div class="flex gap-1 mb-4">
+            <i data-lucide="star" class="w-4 h-4 text-yellow-400 fill-yellow-400"></i>
+            <i data-lucide="star" class="w-4 h-4 text-yellow-400 fill-yellow-400"></i>
+            <i data-lucide="star" class="w-4 h-4 text-yellow-400 fill-yellow-400"></i>
+            <i data-lucide="star" class="w-4 h-4 text-yellow-400 fill-yellow-400"></i>
+            <i data-lucide="star" class="w-4 h-4 text-yellow-400 fill-yellow-400"></i>
+          </div>
+          <p class="text-gray-300 mb-4">"The instant search alone is worth the price. I can find any code snippet in under a second. Game changer!"</p>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-red-500 flex items-center justify-center text-sm font-semibold">MK</div>
+            <div>
+              <div class="font-medium">Mike Kim</div>
+              <div class="text-sm text-gray-500">Tech Lead</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="py-20 px-6">
+    <div class="max-w-3xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">Frequently Asked Questions</h2>
+        <p class="text-gray-400">Got questions? We've got answers.</p>
+      </div>
+
+      <div class="space-y-4" id="faqContainer">
+        <div class="glass rounded-xl overflow-hidden">
+          <button class="w-full px-6 py-4 flex items-center justify-between text-left faq-toggle">
+            <span class="font-medium">Is this a one-time purchase?</span>
+            <i data-lucide="chevron-down" class="w-5 h-5 faq-icon transition-transform"></i>
+          </button>
+          <div class="faq-content hidden px-6 pb-4 text-gray-400">
+            Yes! Pay once, use forever. No subscriptions, no recurring fees. You'll get lifetime access to all current and future features.
+          </div>
+        </div>
+
+        <div class="glass rounded-xl overflow-hidden">
+          <button class="w-full px-6 py-4 flex items-center justify-between text-left faq-toggle">
+            <span class="font-medium">Where is my data stored?</span>
+            <i data-lucide="chevron-down" class="w-5 h-5 faq-icon transition-transform"></i>
+          </button>
+          <div class="faq-content hidden px-6 pb-4 text-gray-400">
+            All your snippets are stored locally in your browser using localStorage. Your data never leaves your device unless you choose to export it.
+          </div>
+        </div>
+
+        <div class="glass rounded-xl overflow-hidden">
+          <button class="w-full px-6 py-4 flex items-center justify-between text-left faq-toggle">
+            <span class="font-medium">Can I export my snippets?</span>
+            <i data-lucide="chevron-down" class="w-5 h-5 faq-icon transition-transform"></i>
+          </button>
+          <div class="faq-content hidden px-6 pb-4 text-gray-400">
+            Absolutely! You can export your entire snippet library as JSON at any time. You can also import snippets back or move them to another device.
+          </div>
+        </div>
+
+        <div class="glass rounded-xl overflow-hidden">
+          <button class="w-full px-6 py-4 flex items-center justify-between text-left faq-toggle">
+            <span class="font-medium">What languages are supported?</span>
+            <i data-lucide="chevron-down" class="w-5 h-5 faq-icon transition-transform"></i>
+          </button>
+          <div class="faq-content hidden px-6 pb-4 text-gray-400">
+            We support 50+ programming languages including JavaScript, Python, CSS, SQL, Bash, JSON, HTML, TypeScript, Go, Rust, and many more.
+          </div>
+        </div>
+
+        <div class="glass rounded-xl overflow-hidden">
+          <button class="w-full px-6 py-4 flex items-center justify-between text-left faq-toggle">
+            <span class="font-medium">Is there a limit on snippets?</span>
+            <i data-lucide="chevron-down" class="w-5 h-5 faq-icon transition-transform"></i>
+          </button>
+          <div class="faq-content hidden px-6 pb-4 text-gray-400">
+            No limits! Create as many snippets as you want. The only constraint is your browser's localStorage capacity (usually 5-10MB).
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-20 px-6">
+    <div class="max-w-4xl mx-auto text-center">
+      <div class="glass rounded-3xl p-12">
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">Ready to Organize Your Code?</h2>
+        <p class="text-gray-400 mb-8 max-w-xl mx-auto">
+          Join thousands of developers who trust Code Snippet Manager for their daily workflow.
+          One-time payment, lifetime access.
+        </p>
+
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+          <button id="ctaBuyBtn" class="glow-btn px-10 py-4 rounded-full text-lg font-semibold">
+            Get Started — $19
+          </button>
+        </div>
+
+        <div class="flex items-center justify-center gap-6 text-sm text-gray-500">
+          <span class="flex items-center gap-2">
+            <i data-lucide="check-circle" class="w-4 h-4 text-green-400"></i>
+            Lifetime Access
+          </span>
+          <span class="flex items-center gap-2">
+            <i data-lucide="check-circle" class="w-4 h-4 text-green-400"></i>
+            30-Day Refund
+          </span>
+          <span class="flex items-center gap-2">
+            <i data-lucide="check-circle" class="w-4 h-4 text-green-400"></i>
+            Free Updates
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 px-6 border-t border-white/10">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-2">
+          <i data-lucide="code-2" class="w-5 h-5 text-indigo-400"></i>
+          <span class="font-semibold">SnippetManager</span>
+        </div>
+        <div class="text-sm text-gray-500">
+          © 2024 Code Snippet Manager. All rights reserved.
+        </div>
+        <div class="flex items-center gap-4">
+          <a href="#" class="text-gray-400 hover:text-white transition">Privacy</a>
+          <a href="#" class="text-gray-400 hover:text-white transition">Terms</a>
+          <a href="#" class="text-gray-400 hover:text-white transition">Contact</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // Checkout URL handling
+    const CHECKOUT_URL = 'https://profitbridge.lemonsqueezy.com/checkout/buy/code-snippet-manager-001';
+
+    document.querySelectorAll('#navBuyBtn, #heroBuyBtn, #ctaBuyBtn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        window.open(CHECKOUT_URL, '_blank');
+      });
+    });
+
+    // Snippet Manager Logic
+    const STORAGE_KEY = 'code_snippets_v1';
+
+    // Default snippets
+    const defaultSnippets = [
+      {
+        id: '1',
+        title: 'React useEffect Hook',
+        language: 'javascript',
+        category: 'react',
+        code: `useEffect(() => {
+  // Your side effect logic here
+  console.log('Component mounted');
+
+  return () => {
+    // Cleanup logic
+    console.log('Component unmounted');
+  };
+}, []); // Empty dependency array = run once`,
+        created: Date.now()
+      },
+      {
+        id: '2',
+        title: 'Python List Comprehension',
+        language: 'python',
+        category: 'utils',
+        code: `# Create a list of squares
+def get_squares(n):
+    return [x**2 for x in range(n)]
+
+# Filter even numbers
+evens = [x for x in range(10) if x % 2 == 0]`,
+        created: Date.now() - 1000
+      },
+      {
+        id: '3',
+        title: 'CSS Flexbox Center',
+        language: 'css',
+        category: 'css',
+        code: `.center-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}`,
+        created: Date.now() - 2000
+      }
+    ];
+
+    // Load snippets from localStorage
+    function loadSnippets() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      return stored ? JSON.parse(stored) : [...defaultSnippets];
+    }
+
+    // Save snippets to localStorage
+    function saveSnippets(snippets) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(snippets));
+    }
+
+    // Render snippets
+    function renderSnippets(snippets, filter = 'all', search = '') {
+      const container = document.getElementById('snippetsList');
+
+      let filtered = snippets;
+
+      // Apply category filter
+      if (filter !== 'all') {
+        filtered = filtered.filter(s => s.category === filter);
+      }
+
+      // Apply search
+      if (search) {
+        const lowerSearch = search.toLowerCase();
+        filtered = filtered.filter(s =>
+          s.title.toLowerCase().includes(lowerSearch) ||
+          s.code.toLowerCase().includes(lowerSearch)
+        );
+      }
+
+      // Sort by newest first
+      filtered.sort((a, b) => b.created - a.created);
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8 text-gray-500">
+            <i data-lucide="inbox" class="w-12 h-12 mx-auto mb-2 opacity-50"></i>
+            <p>No snippets found</p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      container.innerHTML = filtered.map(snippet => `
+        <div class="snippet-card glass rounded-xl overflow-hidden">
+          <div class="flex items-center justify-between px-4 py-3 border-b border-white/10">
+            <div class="flex items-center gap-3">
+              <span class="text-sm font-medium">${snippet.title}</span>
+              <span class="px-2 py-0.5 rounded text-xs bg-white/10">${snippet.language}</span>
+              <span class="px-2 py-0.5 rounded text-xs tag">${snippet.category}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="copySnippet('${snippet.id}')" class="p-1.5 hover:bg-white/10 rounded transition" title="Copy">
+                <i data-lucide="copy" class="w-4 h-4"></i>
+              </button>
+              <button onclick="deleteSnippet('${snippet.id}')" class="p-1.5 hover:bg-red-500/20 rounded transition text-red-400" title="Delete">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+          <pre><code class="language-${snippet.language} code-font text-sm">${escapeHtml(snippet.code)}</code></pre>
+        </div>
+      `).join('');
+
+      // Apply syntax highlighting
+      document.querySelectorAll('pre code').forEach(block => {
+        hljs.highlightElement(block);
+      });
+
+      lucide.createIcons();
+    }
+
+    // Escape HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Copy snippet
+    window.copySnippet = function(id) {
+      const snippets = loadSnippets();
+      const snippet = snippets.find(s => s.id === id);
+      if (snippet) {
+        navigator.clipboard.writeText(snippet.code);
+        showToast('Copied to clipboard!');
+      }
+    };
+
+    // Delete snippet
+    window.deleteSnippet = function(id) {
+      let snippets = loadSnippets();
+      snippets = snippets.filter(s => s.id !== id);
+      saveSnippets(snippets);
+      renderSnippets(snippets, currentFilter, currentSearch);
+      showToast('Snippet deleted');
+    };
+
+    // Toast notification
+    function showToast(message) {
+      const toast = document.createElement('div');
+      toast.className = 'fixed bottom-4 right-4 px-4 py-2 bg-indigo-600 rounded-lg text-sm font-medium z-50';
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2000);
+    }
+
+    // Current filter and search
+    let currentFilter = 'all';
+    let currentSearch = '';
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      const snippets = loadSnippets();
+      renderSnippets(snippets);
+
+      // Save new snippet
+      document.getElementById('saveSnippet').addEventListener('click', () => {
+        const title = document.getElementById('snippetTitle').value.trim();
+        const language = document.getElementById('snippetLang').value;
+        const category = document.getElementById('snippetCategory').value;
+        const code = document.getElementById('snippetCode').value.trim();
+
+        if (!title || !code) {
+          showToast('Please fill in title and code');
+          return;
+        }
+
+        const newSnippet = {
+          id: Date.now().toString(),
+          title,
+          language,
+          category,
+          code,
+          created: Date.now()
+        };
+
+        const snippets = loadSnippets();
+        snippets.push(newSnippet);
+        saveSnippets(snippets);
+
+        // Clear form
+        document.getElementById('snippetTitle').value = '';
+        document.getElementById('snippetCode').value = '';
+
+        renderSnippets(snippets, currentFilter, currentSearch);
+        showToast('Snippet saved!');
+      });
+
+      // Search
+      document.getElementById('searchSnippets').addEventListener('input', (e) => {
+        currentSearch = e.target.value;
+        renderSnippets(loadSnippets(), currentFilter, currentSearch);
+      });
+
+      // Filter tags
+      document.querySelectorAll('[data-filter]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentFilter = btn.dataset.filter;
+
+          // Update active state
+          document.querySelectorAll('[data-filter]').forEach(b => {
+            b.classList.remove('bg-indigo-500/40');
+          });
+          btn.classList.add('bg-indigo-500/40');
+
+          renderSnippets(loadSnippets(), currentFilter, currentSearch);
+        });
+      });
+
+      // FAQ toggles
+      document.querySelectorAll('.faq-toggle').forEach(toggle => {
+        toggle.addEventListener('click', () => {
+          const content = toggle.nextElementSibling;
+          const icon = toggle.querySelector('.faq-icon');
+
+          content.classList.toggle('hidden');
+          icon.style.transform = content.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+        });
+      });
+    });
+  </script>
+</body>
+</html>
